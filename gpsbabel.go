@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	"os/exec"
 
@@ -15,8 +16,16 @@ const (
 )
 
 var (
+	BabelCommandFilepath = "gpsbabel"
+)
+
+var (
 	ErrConversionFailed = errors.New("conversion failed")
 )
+
+func SetBabelFilepath(filepath string) {
+	BabelCommandFilepath = filepath
+}
 
 type Babel struct {
 	fromFormat string
@@ -44,7 +53,7 @@ func (b *Babel) Convert(r io.Reader, w io.Writer) (err error) {
 		"-F", "-",
 	}
 
-	cmd := exec.Command("gpsbabel", parameters...)
+	cmd := exec.Command(BabelCommandFilepath, parameters...)
 	cmd.Stdin = r
 	cmd.Stdout = w
 
@@ -90,4 +99,12 @@ func ConvertToGpx(fromFormat string, r io.Reader, w io.Writer) (err error) {
 	log.PanicIf(err)
 
 	return nil
+}
+
+func init() {
+	commandFilepath := os.Getenv("GPSBABEL_FILEPATH")
+
+	if commandFilepath != "" {
+		BabelCommandFilepath = commandFilepath
+	}
 }
